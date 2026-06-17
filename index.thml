@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI顔面酔っ払いチェッカー PRO 完成版 (解析精度向上＆番号付与)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Noto+Serif+JP:wght@400;900&display=swap" rel="stylesheet">
+    <style>
+        /* 全体：重厚なアンティーク背景（image_7.pngを意識）とモノクロimage_7のカラーパレット */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: #050505; /* image_7.pngの暗い天井のイメージ */
+            color: #d0d0d0; /* 白（モノクロimage_7）をベースに少し暗く */
+            text-align: center; 
+            padding: 15px; 
+            margin: 0; 
+            background-image: 
+                /* image_7.pngのモノクロ天井をぼかして背景に。強い逆光SweepingフレアをCSSで重ねる */
+                linear-gradient(170deg, rgba(13, 13, 13, 0.9) 10%, rgba(26, 26, 26, 0.9) 30%, rgba(13, 13, 13, 0.9) 60%, rgba(26, 26, 26, 0.9) 80%, rgba(13, 13, 13, 0.9) 100%),
+                repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0, rgba(255, 255, 255, 0.05) 1px, transparent 0, transparent 50%),
+                repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.05) 0, rgba(255, 255, 255, 0.05) 1px, transparent 0, transparent 50%);
+            background-blend-mode: multiply, screen, screen;
+        }
+
+        /* タイトル： antique serif (Cinzel) とimage_6のピンクのアクセント */
+        h1 { 
+            font-family: 'Cinzel', serif; /* アンティークフリーフォント */
+            color: #ff2d87; /* image_6.pngのPink Bar LAHのピンク */
+            font-size: 26px; 
+            margin: 10px 0 2px 0; 
+            text-shadow: 0 0 15px rgba(255, 45, 135, 0.6); /* ピンクのネオン風 */
+        }
+        .subtitle { 
+            font-family: 'Noto Serif JP', serif; /* クラシックな明朝体 */
+            color: #aeaeb2; /* モノクロimage_7 */
+            font-size: 13px; 
+            margin-bottom: 20px; 
+        }
+        
+        /* モード切り替えタブ：クラシックな光（image_7）と黒レーステクスチャ（image_6） */
+        .mode-selector { 
+            display: flex; 
+            background: #121212; /* アンティークブラック */
+            border-radius: 8px; 
+            padding: 4px; 
+            margin: 0 auto 20px auto; 
+            width: 90%; 
+            max-width: 400px; 
+            border: 2px solid #2c2c2e; /* モノクロimage_7 */
+            position: relative;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.1); /* クラシックな光 */
+        }
+        .mode-btn { 
+            flex: 1; 
+            background: transparent; 
+            color: #aeaeae; 
+            border: none; 
+            padding: 10px; 
+            font-size: 14px; 
+            font-weight: bold; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            font-family: 'Noto Serif JP', serif;
+        }
+        .mode-btn.active { 
+            background: linear-gradient(135deg, #ff2d87, #b21a5a); /* image_6.pngのピンク〜赤グラデ */
+            color: #fff; 
+            box-shadow: 0 2px 10px rgba(255, 45, 135, 0.4); 
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+        }
+
+        /* コンテナ制御： Turn 14/15/16の配置ロジック verbatim */
+        .card-container { 
+            display: flex; 
+            justify-content: center; 
+            margin-bottom: 20px; 
+            gap: 12px; 
+            max-width: 550px; 
+            margin-left: auto; 
+            margin-right: auto; 
+        }
+        
+        /* カード： Turn 12/13/14/15/16のバッジ重なり防止 padding-top verbatim、アンティークレース装飾 */
+        .card { 
+            background: #121212; /* アンティークブラック */
+            border-radius: 16px; 
+            padding: 12px; 
+            padding-top: 25px; /* verbatim */
+            width: 48%; 
+            box-sizing: border-box; 
+            border: 2px solid #2c2c2e; /* モノクロimage_7 */
+            transition: all 0.3s; 
+            position: relative;
+            font-family: 'Noto Serif JP', serif;
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.7); /* 重厚感 */
+        }
+        .card::before { /* 黒レーステクスチャ（image_6）を擬似要素で */
+            content: "";
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            right: 1px;
+            bottom: 1px;
+            border-radius: 15px;
+            background-image: repeating-conic-gradient(from 45deg, transparent 0% 15%, rgba(0,0,0,0.4) 15% 30%, transparent 30% 100%);
+            background-size: 8px 8px;
+            opacity: 0.15;
+            z-index: 0;
+        }
+        .card.full-width { width: 90%; } /* Turn 14/15/16 VSモード用 */
+        .card h3 { 
+            font-size: 13px; 
+            margin: 0 0 8px 0; 
+            color: #aeaeb2; 
+            text-align: center; 
+            font-weight: bold;
+            z-index: 1; 
+            position: relative;
+        }
+        
+        /* バッジ表示： Turn 11/12/13/14/15/16 のロジック verbatim を維持、デザイン一新 */
+        .badge-required { 
+            position: absolute; 
+            top: 5px; 
+            right: 8px; 
+            background: linear-gradient(135deg, #ff2d87, #b21a5a); /* image_6のピンクグラデ */
+            color: white; 
+            font-size: 10px; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            font-weight: bold;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+            z-index: 1;
+        }
+        .badge-optional { 
+            position: absolute; 
+            top: 5px; 
+            right: 8px; 
+            background: #2c2c2e; /* モノクロimage_7 */
+            color: #aeaeae; 
+            font-size: 10px; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        /* プレビュー・演出用キャンバス： Turn 11/12/13/14/15/16 のロジック verbatim を維持、装飾一新 */
+        .preview-box { 
+            width: 100%; 
+            aspect-ratio: 3/4; 
+            background: #1a1a1a; /* アンティークブラック */
+            border-radius: 12px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden; 
+            position: relative; 
+            border: 2px dashed #aeaeb2; /* モノクロimage_7 dashed borderをクラシックに */
+            margin-top: 5px;
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.1); /* クラシックな光 */
+        }
+        .preview-box span { 
+            font-family: 'Noto Serif JP', serif;
+            color: #8e8e93; 
+            font-size: 11px; 
+            padding: 0 5px;
+        }
+        .preview-box canvas { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            display: block; 
+        }
+        
+        /* アップロードボタン： image_6の赤い口紅〜Pink Barのイメージ、ホバー時にimage_7の強い光 */
+        .upload-btn { 
+            background: linear-gradient(135deg, #ff453a, #ff2d55); /* 赤い口紅〜Pink Bar */
+            color: white; 
+            border: 2px solid transparent; 
+            padding: 8px 10px; 
+            border-radius: 8px; 
+            font-size: 12px; 
+            font-weight: bold; 
+            margin-top: 10px; 
+            width: 100%; 
+            cursor: pointer; 
+            display: block; 
+            box-sizing: border-box; 
+            transition: all 0.3s; 
+            text-align: center;
+            font-family: 'Noto Serif JP', serif;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+            position: relative;
+            z-index: 10;
+        }
+        .upload-btn:hover { 
+            border-color: #aeaeb2; /* モノクロimage_7 */
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2); /* クラシックな光 */
+        }
+        .upload-btn:active { 
+            background: rgba(255, 45, 135, 0.2); /* image_6のピンクのアクセント */
+        }
+        input[type="file"] { 
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 11;
+        }
+        
+        /* 解析ボタン： image_6の赤い口紅〜Pink Barのイメージ、ホバー時にimage_7の強い光 */
+        .calc-btn { 
+            background: linear-gradient(135deg, #ff2d55, #ff2d87, #b21a5a); /* ピンク〜赤〜深い赤（image_6のPink Bar LAHのピンク） */
+            background-size: 200% 100%;
+            color: white; 
+            border: none; 
+            padding: 16px; 
+            border-radius: 30px; 
+            font-size: 18px; 
+            font-weight: bold; 
+            width: 90%; 
+            max-width: 400px; 
+            margin: 20px auto; 
+            box-shadow: 0 4px 25px rgba(255, 45, 135, 0.6); /* ピンクのネオン風 */
+            display: block; 
+            cursor: pointer; 
+            animation: pulse antiquePulse 2s infinite, shimmer 3s infinite linear; 
+            font-family: 'Cinzel', serif; /* タイトルと同じアンティークserif */
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+            border: 2px solid transparent;
+        }
+        .calc-btn:hover {
+            border-color: #fff; /* モノクロimage_7の強い光 */
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.3); /* クラシックな光 */
+        }
+        @keyframes antiquePulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+        @keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+        
+        /* 解析アニメーションオーバーレイ： image_7.pngのモノクロ天井にモノクロ image_6のレーステクスチャ、image_6のピンクのネオン */
+        .scanning-overlay { 
+            display: none; 
+            position: fixed; 
+            top:0; 
+            left:0; 
+            width:100%; 
+            height:100%; 
+            background-color: rgba(5, 5, 5, 0.95); /* image_7.pngの天井を暗く */
+            background-image: 
+                /* image_7.pngの天井モノクロ、Sweepingフレアを追加 */
+                linear-gradient(170deg, rgba(13, 13, 13, 0.9) 10%, rgba(26, 26, 26, 0.9) 30%, rgba(13, 13, 13, 0.9) 60%, rgba(26, 26, 26, 0.9) 80%, rgba(13, 13, 13, 0.9) 100%),
+                repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0, rgba(255, 255, 255, 0.05) 1px, transparent 0, transparent 50%),
+                repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.05) 0, rgba(255, 255, 255, 0.05) 1px, transparent 0, transparent 50%),
+                /* image_6の手袋のようなモノクロレーステクスチャを追加 */
+                repeating-conic-gradient(from 45deg, transparent 0% 15%, rgba(0,0,0,0.6) 15% 30%, transparent 30% 100%);
+            background-size: cover, screen, screen, 12px 12px;
+            background-blend-mode: multiply, screen, screen, multiply;
+            z-index: 100; 
+            align-items: center; 
+            justify-content: center; 
+            flex-direction: column; 
+        }
+        .spinner { 
+            width: 50px; 
+            height: 50px; 
+            border: 5px solid #2c2c2e; /* モノクロ image_7 */
+            border-top: 5px solid #ff2d87; /* image_6のピンクのアクセント */
+            border-radius: 50%; 
+            animation: spin 1s linear infinite; 
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .scan-text { 
+            margin-top: 20px; 
+            font-weight: bold; 
+            color: #ff2d87; /* image_6のピンクのアクセント */
+            letter-spacing: 2px; 
+            font-family: 'Cinzel', serif; /* タイトルと同じアンティークserif */
+            text-shadow: 0 0 10px rgba(255, 45, 135, 0.6); /* ピンクのネオン風 */
+        }
+
+        /* 結果表示エリア： Turn 11/12/13/14/15/16 のロジック verbatim を維持、装飾一新 */
+        #result-modal { 
+            display: none; 
+            margin: 25px auto; 
+            padding: 20px; 
+            border-radius: 16px; 
+            background: linear-gradient(180deg, #121212, #050505); /* アンティークブラック */
+            border: 3px solid #ff2d87; /* image_6のピンクのネオン風 */
+            max-width: 450px; 
+            box-shadow: 0 0 30px rgba(255, 45, 135, 0.4); 
+            text-align: left;
+            position: relative;
+            font-family: 'Noto Serif JP', serif;
+        }
+        #result-modal::before { /* モノクロレーステクスチャを擬似要素で */
+            content: "";
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            bottom: 2px;
+            border-radius: 14px;
+            background-image: repeating-conic-gradient(from 45deg, transparent 0% 15%, rgba(0,0,0,0.6) 15% 30%, transparent 30% 100%);
+            background-size: 10px 10px;
+            opacity: 0.1;
+            z-index: 0;
+        }
+        .result-title { 
+            font-size: 12px; 
+            color: #aeaeae; 
+            letter-spacing: 3px; 
+            text-transform: uppercase; 
+            text-align: center; 
+            margin-bottom: 10px; 
+            font-family: 'Cinzel', serif; /* タイトルと同じアンティークserif */
+            z-index: 1; 
+            position: relative;
+        }
+        .result-main { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin-bottom: 15px; 
+            z-index: 1; 
+            position: relative;
+        }
+        #score-display { 
+            font-size: 64px; 
+            font-weight: 900; 
+            color: #ff2d87; /* image_6のピンクのアクセント */
+            text-shadow: 0 0 20px rgba(255, 45, 135, 0.6); 
+            margin-right: 15px; 
+            font-family: 'Cinzel', serif; /* タイトルと同じアンティークserif */
+        }
+        /* VSモード用スコア拡大： Turn 11 verbatim */
+        #score-display.result-vs-score { font-size: 80px; }
+        .analysis-details { 
+            font-size: 11px; 
+            color: #aeaeb2; 
+            font-family: monospace; 
+            line-height: 1.4; 
+            border-left: 2px solid #ff2d87; 
+            padding-left: 10px; 
+            font-family: 'Noto Serif JP', serif;
+        }
+        #comment-display { 
+            font-size: 15px; 
+            font-weight: bold; 
+            color: #ff9f0a; /* オレンジ〜黄色のアクセント */
+            line-height: 1.6; 
+            padding: 0 10px; 
+            text-align: center; 
+            margin-bottom: 15px; 
+            z-index: 1; 
+            position: relative;
+        }
+        .accuracy-warn { 
+            font-size: 10px; 
+            color: #aeaeb2; 
+            background: rgba(26, 26, 26, 0.9); /* アンティークブラック */
+            padding: 8px; 
+            border-radius: 8px; 
+            margin-top: 15px; 
+            text-align: center; 
+            display: none; 
+            margin-bottom: 15px; 
+            z-index: 1; 
+            position: relative;
+        }
+        
+        /* リセットボタン： image_6のピンク〜深い赤、ホバー時にimage_7の強い光 */
+        .reset-btn { 
+            background: linear-gradient(135deg, #121212, #2c2c2e); /* アンティークブラック */
+            color: #ff2d87; /* image_6のピンクのアクセント */
+            border: 2px solid #ff2d87; 
+            padding: 10px 15px; 
+            border-radius: 8px; 
+            font-size: 14px; 
+            font-weight: bold; 
+            width: 100%; 
+            cursor: pointer; 
+            display: block; 
+            box-sizing: border-box; 
+            transition: all 0.3s; 
+            text-align: center; 
+            margin-top: 15px; 
+            font-family: 'Cinzel', serif; /* アンティークserif */
+            text-shadow: 0 0 10px rgba(255, 45, 135, 0.4); /* ピンクのネオン風 */
+            z-index: 1; 
+            position: relative;
+        }
+        .reset-btn:hover { 
+            border-color: #fff; /* モノクロimage_7の強い光 */
+            color: #fff; 
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2); /* クラシックな光 */
+        }
+        .reset-btn:active { 
+            background: rgba(255, 45, 135, 0.2); /* image_6のピンクのアクセント */
+        }
+
+        /* 隠し要素： Turn 12 verbatim */
+        #hidden-canvas { display: none; }
+    </style>
+</head>
+<body>
+
+    <h1>📸 AI顔面酔っ払いチェッカー PRO</h1>
+    <div class="subtitle">飲酒前後の複合顔画像解析(Color+Expression) 完成版</div>
+
+    <div class="mode-selector">
+        <button id="btn-mode1" class="mode-btn active">1人で診断</button>
+        <button id="btn-mode2" class="mode-btn">2人で対決</button>
+    </div>
+
+    <div class="card-container" id="main-container">
+        <div class="card" id="card-left">
+            <span class="badge-optional" id="badge-left">任意</span>
+            <h3 id="label-left">【飲む前】の顔</h3>
+            <div class="preview-box" id="prev-left"><span>未選択<br>(「飲む前」の写真推奨)</span></div>
+            <label class="upload-btn">
+                写真選択/撮影
+                <input type="file" accept="image/*" id="file-left">
+            </label>
+        </div>
+
+        <div class="card" id="card-right">
+            <span class="badge-required" id="badge-right">必須</span>
+            <h3 id="label-right">【飲んだ後】の顔</h3>
+            <div class="preview-box" id="prev-right"><span>未選択<br>(「飲んだ後」の写真用)</span></div>
+            <label class="upload-btn">
+                写真選択/撮影
+                <input type="file" accept="image/*" id="file-right">
+            </label>
+        </div>
+    </div>
+
+    <button class="calc-btn" id="start-analysis-btn">🔥 AI 酔っ払い度を解析！</button>
+
+    <div id="result-modal">
+        <div class="result-title">🧬 AI MULTI-FACTOR DIAGNOSIS</div>
+        <div class="result-main">
+            <div id="score-display">0%</div>
+            <div class="analysis-details">
+                ANALYSIS MODE: <span id="mode-stat">SINGLE</span><br>
+                REDNESS DELTA: <span id="red-delta">N/A</span><br>
+                EXP DISTORTION: <span id="exp-stat">N/A</span>
+            </div>
+        </div>
+        <div id="comment-display"></div>
+        <div class="accuracy-warn" id="acc-warn">⚠️ [注意] 「飲む前」の画像がありません。絶対評価モードで解析したため、精度が低下しています。</div>
+        
+        <button class="reset-btn" id="reset-app-btn">次の診断へ（リセット）</button>
+    </div>
+
+    <div class="scanning-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+        <div class="scan-text" id="loading-text">FACE SKIN SCANNING...</div>
+    </div>
+
+    <canvas id="hidden-canvas"></canvas>
+
+    <script>
+        // window.onloadに変更 verbatim
+        window.onload = function() {
+            let currentMode = 1; // 1: 1人診断, 2: 2人対決
+            let imgLeft = null;
+            let imgRight = null;
+
+            // DOM要素取得
+            const btn1 = document.getElementById('btn-mode1');
+            const btn2 = document.getElementById('btn-mode2');
+            const fileInputLeft = document.getElementById('file-left');
+            const fileInputRight = document.getElementById('file-right');
+            const calcBtn = document.getElementById('start-analysis-btn');
+            const resetBtn = document.getElementById('reset-app-btn');
+            const modal = document.getElementById('result-modal');
+            const accWarn = document.getElementById('acc-warn');
+            const scoreDisplay = document.getElementById('score-display');
+            const modeStat = document.getElementById('mode-stat');
+            const redDelta = document.getElementById('red-delta');
+            const expStat = document.getElementById('exp-stat');
+            const commentDisplay = document.getElementById('comment-display');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const loadingText = document.getElementById('loading-text');
+            const lblLeft = document.getElementById('label-left');
+            const lblRight = document.getElementById('label-right');
+            const bdgLeft = document.getElementById('badge-left');
+            const bdgRight = document.getElementById('badge-right');
+            const prevBoxLeft = document.getElementById('prev-left');
+            const prevBoxRight = document.getElementById('prev-right');
+            const cardLeft = document.getElementById('card-left');
+            const cardRight = document.getElementById('card-right');
+
+            // モード切り替え処理 verbatim
+            function switchMode(mode) {
+                currentMode = mode;
+                
+                // 結果リセット
+                modal.style.display = 'none';
+                accWarn.style.display = 'none';
+                scoreDisplay.className = ""; // VSモード用クラス解除
+
+                if (mode === 1) {
+                    // 1人で診断モード：左「飲む前」、右「飲んだ後」
+                    btn1.classList.add('active');
+                    btn2.classList.remove('active');
+                    cardLeft.classList.remove('full-width');
+                    cardRight.style.display = 'block';
+                    lblLeft.innerText = "【飲む前】の顔";
+                    lblRight.innerText = "【飲んだ後】の顔";
+                    bdgLeft.innerText = "任意"; bdgLeft.className = "badge-optional";
+                    bdgRight.innerText = "必須"; bdgRight.className = "badge-required";
+                    prevBoxLeft.innerHTML = "<span>未選択<br>(「飲む前」の写真推奨)</span>";
+                    prevBoxRight.innerHTML = "<span>未選択<br>(「飲んだ後」の写真用)</span>";
+                } else {
+                    // 2人で対決モード：1枚の写真から解析 verbatim
+                    btn1.classList.remove('active');
+                    btn2.classList.add('active');
+                    cardLeft.classList.add('full-width'); // 1枚だけ表示
+                    cardRight.style.display = 'none'; // 右側は非表示
+                    lblLeft.innerText = "2人が写った写真";
+                    bdgLeft.innerText = "必須"; bdgLeft.className = "badge-required";
+                    prevBoxLeft.innerHTML = "<span>未選択<br>(2人が写っている写真)</span>";
+                }
+            }
+
+            // イベントリスナーを設定
+            if (btn1) btn1.addEventListener('click', () => switchMode(1));
+            if (btn2) btn2.addEventListener('click', () => switchMode(2));
+
+            // 初期化時に1人モードに設定
+            switchMode(1);
+
+            // 写真選択/撮影イベント verbatim
+            function handleFileSelect(inputElement, previewId, callback) {
+                inputElement.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.src = event.target.result;
+                        img.onload = () => {
+                            renderSourceWithOverlay(img, previewId);
+                            callback(img);
+                        };
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            if (fileInputLeft) handleFileSelect(fileInputLeft, 'prev-left', (img) => { imgLeft = img; });
+            if (fileInputRight) handleFileSelect(fileInputRight, 'prev-right', (img) => { imgRight = img; });
+
+            // 元写真に演出を重ねて表示する関数
+            function renderSourceWithOverlay(img, previewId, metrics = null) {
+                const container = document.getElementById(previewId);
+                container.innerHTML = '';
+                
+                const canvas = document.createElement('canvas');
+                const cw = cw_global = 300;
+                const ch = ch_global = 400;
+                canvas.width = cw;
+                canvas.height = ch;
+                const ctx = canvas.getContext('2d');
+                
+                const imgAspect = img.naturalWidth / img.naturalHeight;
+                const canvasAspect = cw / ch;
+                let sx, sy, sWidth, sHeight;
+                if (imgAspect > canvasAspect) {
+                    sHeight = img.naturalHeight;
+                    sWidth = img.naturalHeight * canvasAspect;
+                    sx = (img.naturalWidth - sWidth) / 2;
+                    sy = 0;
+                } else {
+                    sWidth = img.naturalWidth;
+                    sHeight = img.naturalWidth / canvasAspect;
+                    sx = 0;
+                    sy = (img.naturalHeight - sHeight) / 2;
+                }
+                ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, cw, ch);
+                
+                // 【修正】独立した顔ターゲットを演出。精度感向上
+                if (currentMode === 1) {
+                    // 1人モード: 従来の演出 verbatim
+                    ctx.strokeStyle = '#00ff66';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(60, 100, cw-120, ch-180);
+                    
+                    ctx.fillStyle = 'rgba(0, 255, 66, 0.3)';
+                    for(let x = 80; x <= 220; x += 35) {
+                        for(let y = 140; y <= 300; y += 40) {
+                            ctx.beginPath();
+                            ctx.arc(x, y, 2, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+                    ctx.fillStyle = '#00ff66';
+                    ctx.font = 'bold 10px monospace';
+                    ctx.fillText("FACIAL_GRID: MATCH", cw-100, 25);
+                } else {
+                    // 【修正】VSモード: 独立した2つの顔ターゲット。精度感向上
+                    const faceW = 70, faceH = 80;
+                    const face1X = 60, face1Y = 100;
+                    const face2X = 60 + faceW + 40, face2Y = 100;
+
+                    ctx.strokeStyle = '#00ff66';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(face1X, face1Y, faceW, faceH); // 1人目
+                    ctx.strokeRect(face2X, face2Y, faceW, faceH); // 2人目
+
+                    // 【追加】演出用グリッド（左右それぞれ）
+                    ctx.fillStyle = 'rgba(0, 255, 66, 0.3)';
+                    // 1人目グリッド
+                    for(let x = face1X+10; x <= face1X+faceW-10; x += 25) {
+                        for(let y = face1Y+15; y <= face1Y+faceH-15; y += 25) {
+                            ctx.beginPath();
+                            ctx.arc(x, y, 2, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+                    // 2人目グリッド
+                    for(let x = face2X+10; x <= face2X+faceW-10; x += 25) {
+                        for(let y = face2Y+15; y <= face2Y+faceH-15; y += 25) {
+                            ctx.beginPath();
+                            ctx.arc(x, y, 2, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+                    
+                    ctx.fillStyle = '#00ff66';
+                    ctx.font = 'bold 10px monospace';
+                    ctx.fillText("VS_GRID: 2 Faces MATCH", cw-130, 25);
+                    
+                    // 【追加】解析終了後に番号を付与。どちらか明確にするため
+                    if (metrics && metrics.rDensityRightVS !== undefined) {
+                        ctx.font = 'bold 36px Arial';
+                        // 番号1 (赤色の丸数字)
+                        ctx.fillStyle = '#ff3b30'; // 赤色
+                        ctx.fillText("①", face1X + faceW/2 - 18, face1Y + faceH/2 + 12);
+                        // 番号2
+                        ctx.fillText("②", face2X + faceW/2 - 18, face2Y + faceH/2 + 12);
+                    }
+                }
+
+                if (metrics) {
+                    ctx.strokeStyle = '#ff3b30'; // 赤色
+                    ctx.strokeRect(95, 160, 110, 100);
+                    ctx.fillStyle = 'rgba(255, 59, 48, 0.2)'; // 半透明赤
+                    ctx.fillRect(95, 160, 110, 100);
+                    ctx.fillStyle = '#ff3b30'; // 赤色
+                    ctx.font = 'bold 11px monospace';
+                    
+                    if (currentMode === 1) {
+                        ctx.fillText(`C_RED: ${metrics.rDensity.toFixed(2)}`, 15, 375);
+                        ctx.fillText(`E_VAR: ${metrics.lumaVariance.toFixed(1)}`, cw-90, 375);
+                    } else {
+                        // VSモード時はスコアを表示 verbatim
+                        ctx.fillText(`① RED: ${metrics.rDensityLeftVS.toFixed(2)}`, 15, 375);
+                        ctx.fillText(`② RED: ${metrics.rDensityRightVS.toFixed(2)}`, cw-90, 375);
+                    }
+                } else {
+                    ctx.fillStyle = '#00ff66';
+                    ctx.fillText("SYS_STATUS: WAITING...", 15, 375);
+                }
+                container.appendChild(canvas);
+            }
+
+            // 精密複合分析アルゴリズム (Color + Expression) verbatim
+            function analyzeFaceMetrics(img, previewId) {
+                const canvas = document.getElementById('hidden-canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = 150;
+                canvas.height = 200;
+                
+                const cw = 150, ch = 200;
+                const imgAspect = img.naturalWidth / img.naturalHeight;
+                const canvasAspect = cw / ch;
+                let sx, sy, sWidth, sHeight;
+                if (imgAspect > canvasAspect) {
+                    sHeight = img.naturalHeight;
+                    sWidth = img.naturalHeight * canvasAspect;
+                    sx = (img.naturalWidth - sWidth) / 2;
+                    sy = 0;
+                } else {
+                    sWidth = img.naturalWidth;
+                    sHeight = img.naturalWidth / canvasAspect;
+                    sx = 0;
+                    sy = (img.naturalHeight - sHeight) / 2;
+                }
+                ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, cw, ch);
+                
+                const analysisWidth = 60, analysisHeight = 70;
+                const imgData = ctx.getImageData((cw-analysisWidth)/2, (ch-analysisHeight)/2 + 20, analysisWidth, analysisHeight);
+                const data = imgData.data;
+                
+                let totalR = 0, totalG = 0, totalB = 0;
+                let totalLuma = 0;
+                let lumaValues = [];
+                let sampleCount = 0;
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i], g = data[i+1], b = data[i+2];
+                    const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+                    if ((r + g + b) / 3 > 30) {
+                        totalR += r; totalG += g; totalB += b;
+                        totalLuma += luma;
+                        lumaValues.push(luma);
+                        sampleCount++;
+                    }
+                }
+                if (sampleCount === 0) sampleCount = 1;
+                
+                const avgR = totalR / sampleCount;
+                const avgG = totalG / sampleCount;
+                const avgB = totalB / sampleCount;
+                const avgLuma = totalLuma / sampleCount;
+                
+                let varianceSum = 0;
+                for(let l of lumaValues) { varianceSum += Math.pow(l - avgLuma, 2); }
+                const lumaVariance = varianceSum / sampleCount;
+                const rDensity = avgR / ((avgG + avgB) / 2 + 1);
+                
+                const metrics = { rDensity: rDensity, lumaVariance: lumaVariance, avgLuma: avgLuma };
+                renderSourceWithOverlay(img, previewId, metrics);
+                return metrics;
+            }
+
+            // 【修正】VSモード用のカラー分析アルゴリズム。1枚画像から、独立した2人をサンプリング
+            function analyzeSkinMetricsVS_Enhanced(img) {
+                const canvas = document.getElementById('hidden-canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // 【修正】imgの本来のサイズを使用 verbatim
+                const natW = img.naturalWidth;
+                const natH = img.naturalHeight;
+                canvas.width = natW;
+                canvas.height = natH;
+                ctx.drawImage(img, 0, 0);
+                
+                // 【修正】独立したサンプリング座標計算 verbatim
+                // プレビュー表示(cw=300, ch=400)に対する比率 verbatim
+                const scaleX = natW / cw_global;
+                const scaleY = natH / ch_global;
+
+                // 独立したサンプリングエリア（1人目：①、2人目：②）。精度向上のため顔に特化
+                // verbatim ロジックに基づき、独立した顔矩形を指定
+                const faceW = 70, faceH = 80;
+                const face1X = 60, face1Y = 100;
+                const face2X = 60 + faceW + 40, face2Y = 100; // xOffsetにwidth+余白を加算
+
+                const actualF1X = face1X * scaleX;
+                const actualF1Y = face1Y * scaleY;
+                const actualF2X = face2X * scaleX;
+                const actualF2Y = face2Y * scaleY;
+                const actualFW = faceW * scaleX;
+                const actualFH = faceH * scaleY;
+
+                // サンプリング関数 verbatim
+                function getDensity(ax, ay, aw, ah) {
+                    const imgData = ctx.getImageData(ax, ay, aw, ah);
+                    const data = imgData.data;
+                    let totalR = 0, totalG = 0, totalB = 0;
+                    let sampleCount = 0;
+                    for (let i = 0; i < data.length; i += 4) {
+                        const r = data[i], g = data[i+1], b = data[i+2];
+                        if ((r + g + b) / 3 > 30) {
+                            totalR += r; totalG += g; totalB += b;
+                            sampleCount++;
+                        }
+                    }
+                    if (sampleCount === 0) sampleCount = 1;
+                    const avgR = totalR / sampleCount;
+                    const avgG = totalG / sampleCount;
+                    const avgB = totalB / sampleCount;
+                    // 赤み密度の算出指数
+                    return avgR / ((avgG + avgB) / 2 + 1);
+                }
+
+                const rDensityLeftVS = getDensity(actualF1X, actualF1Y, actualFW, actualFH); // ①
+                const rDensityRightVS = getDensity(actualF2X, actualF2Y, actualFW, actualFH); // ②
+                
+                // 解析結果と演出用データを渡す verbatim
+                const metrics = { rDensityLeftVS, rDensityRightVS };
+                renderSourceWithOverlay(img, 'prev-left', metrics);
+                return metrics;
+            }
+
+            function startAnalysis() {
+                // 必須チェック verbatim
+                if (currentMode === 1) {
+                    if (!imgRight) { alert("⚠️ 酔っ払い顔（【飲んだ後】の顔）の写真を選んでください！"); return; }
+                } else {
+                    if (!imgLeft) { alert("⚠️ 2人が写った写真（2人で対決モード）を選んでください！"); return; }
+                }
+                
+                loadingOverlay.style.display = 'flex';
+                loadingText.innerText = "CONNECTING AI CORE...";
+                setTimeout(() => { loadingText.innerText = "CHROMINANCE Delta Scan..."; }, 600);
+                setTimeout(() => { loadingText.innerText = "EXPRESSION Variant Analyze..."; }, 1200);
+                setTimeout(() => { loadingOverlay.style.display = 'none'; executeAnalysis(); }, 1800);
+            }
+
+            if (calcBtn) calcBtn.addEventListener('click', startAnalysis);
+
+            // 解析の本処理
+            function executeAnalysis() {
+                scoreDisplay.className = "";
+
+                if (currentMode === 1) {
+                    // 1人モード解析：右「飲んだ後」
+                    const metricsAfter = analyzeFaceMetrics(imgRight, 'prev-right');
+                    if (imgLeft) {
+                        const metricsBefore = analyzeFaceMetrics(imgLeft, 'prev-left');
+                        modeStat.innerText = "SINGLE (Rel.Delta)";
+                        accWarn.style.display = 'none';
+                        const deltaR = metricsAfter.rDensity - metricsBefore.rDensity;
+                        redDelta.innerText = (deltaR >= 0 ? "+" : "") + deltaR.toFixed(2);
+                        const varRatio = metricsAfter.lumaVariance / metricsBefore.lumaVariance;
+                        const expDistortion = Math.abs(1 - varRatio);
+                        expStat.innerText = (expDistortion * 100).toFixed(1) + "%";
+                        let score = Math.floor((deltaR * 250) + (expDistortion * 150));
+                        if(deltaR < 0.05) score = Math.floor(expDistortion * 300);
+                        if (score < 5) score = Math.floor(Math.random() * 5);
+                        if (score > 100) score = 100;
+                        scoreDisplay.innerText = score + " %";
+                        if (score < 20) { commentDisplay.innerHTML = "【判定: シラフ鉄壁】<br>事前の顔とほぼ変化がありません。驚異の代謝能力！アルコール、どこに行ったんですカ？"; } 
+                        else if (score < 50) { commentDisplay.innerHTML = "【判定: ほろよい】<br>赤みが増し、表情も少し緩んで、一番会話が楽しい絶好調の状態です！スマートに楽しんでいますね。"; } 
+                        else if (score < 80) { commentDisplay.innerHTML = "【判定: 酩酊アラート】<br>しっかり毛細血管が拡張して仕上がっています！そろそろ滑舌が怪しくなっていませんか？チェイサー（お水）を挟みましょう。"; } 
+                        else { commentDisplay.innerHTML = "【判定: アルコールエクスプレス】<br>真っ赤です！ママもびっくりの限界突破。今すぐウコンを流し込み、大人しくお会計の準備をしましょう。"; }
+                    } else {
+                        modeStat.innerText = "SINGLE (Absolute)";
+                        accWarn.style.display = 'block';
+                        redDelta.innerText = "N/A"; expStat.innerText = "N/A";
+                        let baseValue = metricsAfter.rDensity;
+                        let score = Math.floor((baseValue - 1.10) * 250);
+                        if (score < 0) score = Math.floor(Math.random() * 10);
+                        if (score > 100) score = 100;
+                        scoreDisplay.innerText = score + " %";
+                        if (score < 25) { commentDisplay.innerHTML = "【判定: シラフ鉄壁(推定)】<br>赤みはほぼゼロ！代謝能力か、まだエンジンがかかっていません。ママ、強いお酒を！"; } 
+                        else if (score < 60) { commentDisplay.innerHTML = "【判定: ほろよい(推定)】<br>血行が良くなり一番トークが弾むゴールメントタイム！お酒を美味しく楽しく飲めているスマートな状態です。"; } 
+                        else { commentDisplay.innerHTML = "【判定: 泥酔(推定)】<br>泥酔警報！しっかり毛細血管が拡張して仕上がっています！チェイサー（お水）を挟みましょう。"; }
+                    }
+                } else {
+                    // 【修正】VSモード：1枚の画像を独立した2つの顔サンプリングエリアで解析
+                    const metricsVS = analyzeSkinMetricsVS_Enhanced(imgLeft);
+                    
+                    modeStat.innerText = "VS MODE (独立2顔サンプリング)";
+                    accWarn.style.display = 'none';
+                    
+                    // VSモード用スコア拡大クラス適用 verbatim
+                    scoreDisplay.className = "result-vs-score";
+
+                    // 泥酔度比率の算出 verbatim
+                    const diffVS = metricsVS.rDensityLeftVS - metricsVS.rDensityRightVS;
+                    redDelta.innerText = "N/A"; expStat.innerText = "N/A";
+
+                    if (Math.abs(diffVS) < 0.03) {
+                        scoreDisplay.innerText = "DRAW";
+                        commentDisplay.innerHTML = "【判定: 引き分け】<br>二人の赤み指数はほぼ同等！息ぴったりのシンクロ酔っ払いです。仲良く並んでお水を飲みましょう。";
+                    } else if (diffVS > 0) {
+                        scoreDisplay.innerText = "①の勝ち";
+                        commentDisplay.innerHTML = "【判定: ①人目の泥酔】<br>1枚の写真から独立サンプリングされた①人目の方が完全に仕上がっています！②人目の方は奢ってもらいましょう。";
+                    } else {
+                        scoreDisplay.innerText = "②の勝ち";
+                        commentDisplay.innerHTML = "【判定: ②人目の泥酔】<br>1枚の写真から独立サンプリングされた②人目の顔面が真っ赤に燃え上がっています！今日の主役はあなたです。優しく送ってあげて。";
+                    }
+                }
+                if (modal) modal.style.display = 'block';
+                modal.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            function resetApp() {
+                imgLeft = null; imgRight = null;
+                switchMode(currentMode); // 現在のモードのテキストにリセット
+                document.getElementById('file-left').value = ""; document.getElementById('file-right').value = "";
+                modal.style.display = 'none'; accWarn.style.display = 'none'; scoreDisplay.className = "";
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            if (resetBtn) resetBtn.addEventListener('click', resetApp);
+        };
+    </script>
+</body>
+</html>
