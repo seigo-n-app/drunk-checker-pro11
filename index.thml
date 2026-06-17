@@ -40,7 +40,7 @@
         /* モード切り替えタブ：クラシックな光（image_7）と黒レーステクスチャ（image_6） */
         .mode-selector { 
             display: flex; 
-            background: #121212; /* アンティークブラック */
+            background: #121212; /* 暗いアンティークブラック */
             border-radius: 8px; 
             padding: 4px; 
             margin: 0 auto 20px auto; 
@@ -70,7 +70,7 @@
             text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
         }
 
-        /* コンテナ制御： Turn 14/15/16の配置ロジック verbatim */
+        /* コンテナ制御 */
         .card-container { 
             display: flex; 
             justify-content: center; 
@@ -81,12 +81,12 @@
             margin-right: auto; 
         }
         
-        /* カード： Turn 12/13/14/15/16のバッジ重なり防止 padding-top verbatim、アンティークレース装飾 */
+        /* カード：デザインはアンティークレース */
         .card { 
             background: #121212; /* アンティークブラック */
             border-radius: 16px; 
             padding: 12px; 
-            padding-top: 25px; /* verbatim */
+            padding-top: 25px; /* バッジ重なり防止 */
             width: 48%; 
             box-sizing: border-box; 
             border: 2px solid #2c2c2e; /* モノクロimage_7 */
@@ -108,7 +108,6 @@
             opacity: 0.15;
             z-index: 0;
         }
-        .card.full-width { width: 90%; } /* Turn 14/15/16 VSモード用 */
         .card h3 { 
             font-size: 13px; 
             margin: 0 0 8px 0; 
@@ -119,7 +118,7 @@
             position: relative;
         }
         
-        /* バッジ表示： Turn 11/12/13/14/15/16 のロジック verbatim を維持、デザイン一新 */
+        /* バッジ表示 */
         .badge-required { 
             position: absolute; 
             top: 5px; 
@@ -146,11 +145,11 @@
             z-index: 1;
         }
 
-        /* プレビュー・演出用キャンバス： Turn 11/12/13/14/15/16 のロジック verbatim を維持、装飾一新 */
+        /* プレビュー・演出用キャンバス：装飾一新 */
         .preview-box { 
             width: 100%; 
             aspect-ratio: 3/4; 
-            background: #1a1a1a; /* アンティークブラック */
+            background: #1a1a1a; /* 暗いアンティークブラック */
             border-radius: 12px; 
             display: flex; 
             align-items: center; 
@@ -239,7 +238,7 @@
         @keyframes antiquePulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
         @keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
         
-        /* 解析アニメーションオーバーレイ： image_7.pngのモノクロ天井にモノクロ image_6のレーステクスチャ、image_6のピンクのネオン */
+        /* 解析アニメーションオーバーレイ： image_7.pngのモノクロ天井にモノクロimage_6のレーステクスチャ、image_6のピンクのネオン */
         .scanning-overlay { 
             display: none; 
             position: fixed; 
@@ -265,7 +264,7 @@
         .spinner { 
             width: 50px; 
             height: 50px; 
-            border: 5px solid #2c2c2e; /* モノクロ image_7 */
+            border: 5px solid #2c2c2e; /* モノクロimage_7 */
             border-top: 5px solid #ff2d87; /* image_6のピンクのアクセント */
             border-radius: 50%; 
             animation: spin 1s linear infinite; 
@@ -280,13 +279,13 @@
             text-shadow: 0 0 10px rgba(255, 45, 135, 0.6); /* ピンクのネオン風 */
         }
 
-        /* 結果表示エリア： Turn 11/12/13/14/15/16 のロジック verbatim を維持、装飾一新 */
+        /* 結果表示エリア：装飾一新 */
         #result-modal { 
             display: none; 
             margin: 25px auto; 
             padding: 20px; 
             border-radius: 16px; 
-            background: linear-gradient(180deg, #121212, #050505); /* アンティークブラック */
+            background: linear-gradient(180deg, #121212, #050505); /* 深いアンティークブラック */
             border: 3px solid #ff2d87; /* image_6のピンクのネオン風 */
             max-width: 450px; 
             box-shadow: 0 0 30px rgba(255, 45, 135, 0.4); 
@@ -334,7 +333,7 @@
             margin-right: 15px; 
             font-family: 'Cinzel', serif; /* タイトルと同じアンティークserif */
         }
-        /* VSモード用スコア拡大： Turn 11 verbatim */
+        /* VSモード用スコア拡大 */
         #score-display.result-vs-score { font-size: 80px; }
         .analysis-details { 
             font-size: 11px; 
@@ -359,7 +358,7 @@
         .accuracy-warn { 
             font-size: 10px; 
             color: #aeaeb2; 
-            background: rgba(26, 26, 26, 0.9); /* アンティークブラック */
+            background: rgba(26, 26, 26, 0.9); /* 暗いアンティークブラック */
             padding: 8px; 
             border-radius: 8px; 
             margin-top: 15px; 
@@ -372,7 +371,7 @@
         
         /* リセットボタン： image_6のピンク〜深い赤、ホバー時にimage_7の強い光 */
         .reset-btn { 
-            background: linear-gradient(135deg, #121212, #2c2c2e); /* アンティークブラック */
+            background: linear-gradient(135deg, #121212, #2c2c2e); /* 深いアンティークブラック */
             color: #ff2d87; /* image_6のピンクのアクセント */
             border: 2px solid #ff2d87; 
             padding: 10px 15px; 
@@ -386,7 +385,7 @@
             transition: all 0.3s; 
             text-align: center; 
             margin-top: 15px; 
-            font-family: 'Cinzel', serif; /* アンティークserif */
+            font-family: 'Cinzel', serif; /* タイトルと同じアンティークserif */
             text-shadow: 0 0 10px rgba(255, 45, 135, 0.4); /* ピンクのネオン風 */
             z-index: 1; 
             position: relative;
@@ -400,7 +399,7 @@
             background: rgba(255, 45, 135, 0.2); /* image_6のピンクのアクセント */
         }
 
-        /* 隠し要素： Turn 12 verbatim */
+        /* 隠し要素：一時的な画像処理用 */
         #hidden-canvas { display: none; }
     </style>
 </head>
@@ -493,7 +492,7 @@
             const cardLeft = document.getElementById('card-left');
             const cardRight = document.getElementById('card-right');
 
-            // モード切り替え処理 verbatim
+            // モード切り替え処理
             function switchMode(mode) {
                 currentMode = mode;
                 
@@ -515,7 +514,7 @@
                     prevBoxLeft.innerHTML = "<span>未選択<br>(「飲む前」の写真推奨)</span>";
                     prevBoxRight.innerHTML = "<span>未選択<br>(「飲んだ後」の写真用)</span>";
                 } else {
-                    // 2人で対決モード：1枚の写真から解析 verbatim
+                    // 2人で対決モード：1枚の写真から解析
                     btn1.classList.remove('active');
                     btn2.classList.add('active');
                     cardLeft.classList.add('full-width'); // 1枚だけ表示
@@ -566,25 +565,25 @@
                 canvas.height = ch;
                 const ctx = canvas.getContext('2d');
                 
-                const imgAspect = img.naturalWidth / img.naturalHeight;
+                const imgAspect = img.width / img.height;
                 const canvasAspect = cw / ch;
                 let sx, sy, sWidth, sHeight;
                 if (imgAspect > canvasAspect) {
-                    sHeight = img.naturalHeight;
-                    sWidth = img.naturalHeight * canvasAspect;
-                    sx = (img.naturalWidth - sWidth) / 2;
+                    sHeight = img.height;
+                    sWidth = img.height * canvasAspect;
+                    sx = (img.width - sWidth) / 2;
                     sy = 0;
                 } else {
-                    sWidth = img.naturalWidth;
-                    sHeight = img.naturalWidth / canvasAspect;
+                    sWidth = img.width;
+                    sHeight = img.width / canvasAspect;
                     sx = 0;
-                    sy = (img.naturalHeight - sHeight) / 2;
+                    sy = (img.height - sHeight) / 2;
                 }
                 ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, cw, ch);
                 
                 // 【修正】独立した顔ターゲットを演出。精度感向上
                 if (currentMode === 1) {
-                    // 1人モード: 従来の演出 verbatim
+                    // 1人モード: 従来の演出
                     ctx.strokeStyle = '#00ff66';
                     ctx.lineWidth = 2;
                     ctx.strokeRect(60, 100, cw-120, ch-180);
@@ -657,7 +656,7 @@
                         ctx.fillText(`C_RED: ${metrics.rDensity.toFixed(2)}`, 15, 375);
                         ctx.fillText(`E_VAR: ${metrics.lumaVariance.toFixed(1)}`, cw-90, 375);
                     } else {
-                        // VSモード時はスコアを表示 verbatim
+                        // VSモード時はスコアを表示
                         ctx.fillText(`① RED: ${metrics.rDensityLeftVS.toFixed(2)}`, 15, 375);
                         ctx.fillText(`② RED: ${metrics.rDensityRightVS.toFixed(2)}`, cw-90, 375);
                     }
@@ -676,19 +675,19 @@
                 canvas.height = 200;
                 
                 const cw = 150, ch = 200;
-                const imgAspect = img.naturalWidth / img.naturalHeight;
+                const imgAspect = img.width / img.height;
                 const canvasAspect = cw / ch;
                 let sx, sy, sWidth, sHeight;
                 if (imgAspect > canvasAspect) {
-                    sHeight = img.naturalHeight;
-                    sWidth = img.naturalHeight * canvasAspect;
-                    sx = (img.naturalWidth - sWidth) / 2;
+                    sHeight = img.height;
+                    sWidth = img.height * canvasAspect;
+                    sx = (img.width - sWidth) / 2;
                     sy = 0;
                 } else {
-                    sWidth = img.naturalWidth;
-                    sHeight = img.naturalWidth / canvasAspect;
+                    sWidth = img.width;
+                    sHeight = img.width / canvasAspect;
                     sx = 0;
-                    sy = (img.naturalHeight - sHeight) / 2;
+                    sy = (img.height - sHeight) / 2;
                 }
                 ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, cw, ch);
                 
@@ -733,20 +732,19 @@
                 const canvas = document.getElementById('hidden-canvas');
                 const ctx = canvas.getContext('2d');
                 
-                // 【修正】imgの本来のサイズを使用 verbatim
+                // imgの本来のサイズを使用
                 const natW = img.naturalWidth;
                 const natH = img.naturalHeight;
                 canvas.width = natW;
                 canvas.height = natH;
                 ctx.drawImage(img, 0, 0);
                 
-                // 【修正】独立したサンプリング座標計算 verbatim
-                // プレビュー表示(cw=300, ch=400)に対する比率 verbatim
+                // 実際のサンプリング座標計算
+                // プレビュー表示(cw=300, ch=400)に対する比率
                 const scaleX = natW / cw_global;
                 const scaleY = natH / ch_global;
 
-                // 独立したサンプリングエリア（1人目：①、2人目：②）。精度向上のため顔に特化
-                // verbatim ロジックに基づき、独立した顔矩形を指定
+                // 【修正】独立したサンプリングエリア（1人目：①、2人目：②）。精度向上のため顔に特化
                 const faceW = 70, faceH = 80;
                 const face1X = 60, face1Y = 100;
                 const face2X = 60 + faceW + 40, face2Y = 100; // xOffsetにwidth+余白を加算
@@ -782,7 +780,7 @@
                 const rDensityLeftVS = getDensity(actualF1X, actualF1Y, actualFW, actualFH); // ①
                 const rDensityRightVS = getDensity(actualF2X, actualF2Y, actualFW, actualFH); // ②
                 
-                // 解析結果と演出用データを渡す verbatim
+                // 解析結果と演出用データを渡す
                 const metrics = { rDensityLeftVS, rDensityRightVS };
                 renderSourceWithOverlay(img, 'prev-left', metrics);
                 return metrics;
@@ -829,7 +827,7 @@
                         if (score < 20) { commentDisplay.innerHTML = "【判定: シラフ鉄壁】<br>事前の顔とほぼ変化がありません。驚異の代謝能力！アルコール、どこに行ったんですカ？"; } 
                         else if (score < 50) { commentDisplay.innerHTML = "【判定: ほろよい】<br>赤みが増し、表情も少し緩んで、一番会話が楽しい絶好調の状態です！スマートに楽しんでいますね。"; } 
                         else if (score < 80) { commentDisplay.innerHTML = "【判定: 酩酊アラート】<br>しっかり毛細血管が拡張して仕上がっています！そろそろ滑舌が怪しくなっていませんか？チェイサー（お水）を挟みましょう。"; } 
-                        else { commentDisplay.innerHTML = "【判定: アルコールエクスプレス】<br>真っ赤です！ママもびっくりの限界突破。今すぐウコンを流し込み、大人しくお会計の準備をしましょう。"; }
+                        else { commentDisplay.innerHTML = "【判定: アルコールエクスプレス】<br>完全に別人です！AIが限界突破を認定。ウコンを飲んで、お会計の準備をしましょう。"; }
                     } else {
                         modeStat.innerText = "SINGLE (Absolute)";
                         accWarn.style.display = 'block';
@@ -840,8 +838,8 @@
                         if (score > 100) score = 100;
                         scoreDisplay.innerText = score + " %";
                         if (score < 25) { commentDisplay.innerHTML = "【判定: シラフ鉄壁(推定)】<br>赤みはほぼゼロ！代謝能力か、まだエンジンがかかっていません。ママ、強いお酒を！"; } 
-                        else if (score < 60) { commentDisplay.innerHTML = "【判定: ほろよい(推定)】<br>血行が良くなり一番トークが弾むゴールメントタイム！お酒を美味しく楽しく飲めているスマートな状態です。"; } 
-                        else { commentDisplay.innerHTML = "【判定: 泥酔(推定)】<br>泥酔警報！しっかり毛細血管が拡張して仕上がっています！チェイサー（お水）を挟みましょう。"; }
+                        else if (score < 60) { commentDisplay.innerHTML = "【判定: ほろよい(推定)】<br>血行が良い状態です。トークが弾むゴールメントタイム！美味しくお酒を飲めています。"; } 
+                        else { commentDisplay.innerHTML = "【判定: 泥酔(推定)】<br>真っ赤です！ウコンを飲んで、お会計の準備をしましょう。"; }
                     }
                 } else {
                     // 【修正】VSモード：1枚の画像を独立した2つの顔サンプリングエリアで解析
@@ -859,7 +857,7 @@
 
                     if (Math.abs(diffVS) < 0.03) {
                         scoreDisplay.innerText = "DRAW";
-                        commentDisplay.innerHTML = "【判定: 引き分け】<br>二人の赤み指数はほぼ同等！息ぴったりのシンクロ酔っ払いです。仲良く並んでお水を飲みましょう。";
+                        commentDisplay.innerHTML = "【判定: 引き分け】<br>二人の赤み指数はほぼ同等！息ぴったりのシンクロ酔っ払いです。並んでお水を飲みましょう。";
                     } else if (diffVS > 0) {
                         scoreDisplay.innerText = "①の勝ち";
                         commentDisplay.innerHTML = "【判定: ①人目の泥酔】<br>1枚の写真から独立サンプリングされた①人目の方が完全に仕上がっています！②人目の方は奢ってもらいましょう。";
